@@ -272,7 +272,7 @@ translation can be dismissed via C-c C-k."
   (select-window (get-buffer-window txl-translation-buffer-name)))
 
 ;;;###autoload
-(defun txl-translate-region-or-paragraph-insert (&optional prefix-arg)
+(defun txl-translate-insert (&optional prefix-arg)
   (interactive "P")
   (setq txl-source-buffer (current-buffer))
   (let* ((route (if prefix-arg
