@@ -69,6 +69,7 @@ Will be restored when the buffer for reviewing the translation is closed.")
   :type '(cons
           (choice
            (const :tag "German" DE)
+           (const :tag "Korean" KO)
            (const :tag "British English" EN-GB)
            (const :tag "American English" EN-US)
            (const :tag "French" FR)
@@ -83,6 +84,7 @@ Will be restored when the buffer for reviewing the translation is closed.")
            (const :tag "Chinese" ZH))
           (choice
            (const :tag "German" DE)
+           (const :tag "Korean" KO)
            (const :tag "British English" EN-GB)
            (const :tag "American English" EN-US)
            (const :tag "French" FR)
@@ -230,6 +232,13 @@ written, i.e. the target language of a translation."
     (delete-region beginning (txl-end))
     (insert string)))
 
+(defun txl-insert-region-or-paragraph (string)
+  "Insert region or paragraph with STRING."
+  (let ((beginning (txl-beginning)))
+    (goto-char (txl-end))
+    (insert "\n\n")
+    (insert string)))
+
 ;;;###autoload
 (defun txl-translate-region-or-paragraph (&optional prefix-arg)
   "Translate the region or paragraph and display result in a separate buffer.
@@ -262,6 +271,24 @@ translation can be dismissed via C-c C-k."
                     (window-height . fit-window-to-buffer)))
   (select-window (get-buffer-window txl-translation-buffer-name)))
 
+;;;###autoload
+(defun txl-translate-region-or-paragraph-insert (&optional prefix-arg)
+  (interactive "P")
+  (setq txl-source-buffer (current-buffer))
+  (let* ((route (if prefix-arg
+                    (list (txl-other-language) (txl-guess-language))
+                  (list (txl-other-language))))
+         (translation (apply 'txl-translate route)))
+    (with-current-buffer txl-source-buffer
+      (unless (derived-mode-p 'text-mode)
+        (text-mode))
+      (txl-insert-region-or-paragraph translation)
+      ;; (fill-paragraph)
+      )
+    (display-buffer txl-source-buffer)
+    )
+  )
+
 (defun txl-accept-translation ()
   "Hide buffer for reviewing and editing, replace original text with translation."
   (interactive)
@@ -269,6 +296,14 @@ translation can be dismissed via C-c C-k."
     (txl-dismiss-translation)
     (with-current-buffer txl-source-buffer
       (txl-replace-region-or-paragraph translation))))
+
+(defun txl-insert-translation ()
+  "Hide buffer for reviewing and editing, insert original text with translation."
+  (interactive)
+  (let ((translation (buffer-string)))
+    (txl-dismiss-translation)
+    (with-current-buffer txl-source-buffer
+      (txl-insert-region-or-paragraph translation))))
 
 (defun txl-dismiss-translation ()
   "Hide buffer for reviewing and editing translation."
@@ -280,12 +315,13 @@ translation can be dismissed via C-c C-k."
   "Minor mode for reviewing and editing translations."
   :keymap (let ((map (make-sparse-keymap)))
             (define-key map (kbd "C-c C-c") 'txl-accept-translation)
+            (define-key map (kbd "C-c C-i") 'txl-insert-translation)
             (define-key map (kbd "C-c C-k") 'txl-dismiss-translation)
             map)
   (setq-local
    header-line-format
    (substitute-command-keys
-    " Accept translation \\[txl-accept-translation], dismiss translation \\[txl-dismiss-translation]")))
+    "Insert translation \\[txl-insert-translation], Replace translation \\[txl-accept-translation], dismiss translation \\[txl-dismiss-translation]")))
 
 ;; Define global minor mode.  This is needed to the toggle minor mode.
 ;;;###autoload
