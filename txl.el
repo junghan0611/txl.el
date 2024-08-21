@@ -283,7 +283,7 @@ translation can be dismissed via C-c C-k."
       (unless (derived-mode-p 'text-mode)
         (text-mode))
       (txl-insert-region-or-paragraph translation)
-      (fill-paragraph)
+      (unfill-paragraph)
       )
     (display-buffer txl-source-buffer)
     )
